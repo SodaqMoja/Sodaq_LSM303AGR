@@ -117,6 +117,65 @@ public:
         // TEMP_CFG_REG_A
         TEMP_EN1 = 7,
         TEMP_EN0 = 6,
+
+    };
+
+    enum MagRegisterBits {
+        // CFG_REG_A_M
+        MD0 = 0,
+        MD1 = 1,
+        MagODR0 = 2,
+        LP = 4,
+        SOFT_RST = 5,
+        REBOOT = 6,
+        COMP_TEMP_EN = 7,
+
+        // CFG_REG_B_M
+        LPF = 0,
+        OFF_CANC = 1,
+        Set_FREQ = 2,
+        INT_on_DataOFF = 3,
+        OFF_CANC_ONE_SHOT = 4,
+
+        // CFG_REG_C_M
+        INT_MAG = 0,
+        Self_test = 1,
+        MagBLE = 3,
+        MagBDU = 4,
+        I2C_DIS = 5,
+        INT_MAG_PIN = 5,
+
+        // INT_CTRL_REG_M
+        IEN = 0,
+        IEL = 1,
+        IEA = 2,
+        ZIEN = 5,
+        YIEN = 6,
+        XIEN = 7,
+
+        // INT_SOURCE_REG_M
+        INT = 0,
+        MROI = 1,
+        X_TH_S_Z = 2,
+        N_TH_S_Y = 3,
+        N_TH_S_X = 4,
+
+        P_TH_S_Z = 5,
+        P_TH_S_Y = 6,
+        P_TH_S_X = 7,
+
+        // STATUS_REG_M
+        xda = 0,
+        yda = 1,
+        zda = 2,
+
+        Zyxda = 3,
+
+        Magxor = 4,
+        Magyor = 5,
+        Magzor = 5,
+
+        Zyxor = 6,
     };
 
     // the values of the following enum are 0b(LPen,HR)
@@ -124,6 +183,11 @@ public:
         LowPowerMode = 0b10,
         NormalMode = 0b00,
         HighResMode = 0b01
+    };
+
+    enum MagnetometerMode {
+        MagLowPowerMode = 0b0,
+        MagHighResMode = 0b1
     };
 
     enum AccelerometerODR {
@@ -137,6 +201,19 @@ public:
         HrNormalLowPower400Hz = 0b0111,
         LowPower1k6Hz = 0b1000,
         HrNormal1k344LowPower5k376Hz = 0b1001
+    };
+
+    enum MagnetometerODR {
+        Hz10 = 0b00,
+        Hz20 = 0b01,
+        Hz50 = 0b10,
+        Hz100 = 0b11,
+    };
+
+    enum MagnetometerSystemMode {
+        Continiuous = 0b00,
+        Single = 0b01,
+        IdleMode = 0b10,
     };
 
     enum Axes {
