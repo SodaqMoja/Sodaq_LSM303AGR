@@ -259,7 +259,9 @@ public:
     void disableAccelerometer();
     void rebootAccelerometer();
 
+    void enableMagnetometer(MagnetometerMode mode = MagLowPowerMode, MagnetometerODR odr = Hz10, MagnetometerSystemMode systemMode = Single, bool compensateTemp = false);
     void disableMagnetometer();
+    void rebootMagnetometer();
 
     void enableInterrupt1(uint8_t axesEvents, double threshold, uint8_t duration, InterruptMode interruptMode = MovementRecognition);
     void disableInterrupt1();

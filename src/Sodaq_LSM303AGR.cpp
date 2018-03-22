@@ -83,9 +83,35 @@ void Sodaq_LSM303AGR::enableAccelerometer(AccelerometerMode mode, AccelerometerO
     }
 }
 
+void Sodaq_LSM303AGR::enableMagnetometer(MagnetometerMode mode, MagnetometerODR odr, MagnetometerSystemMode systemMode, bool compensateTemp)
+{
+    // set odr, mode, systemMode
+    setMagRegisterBits(CFG_REG_A_M, systemMode);
+    setMagRegisterBits(CFG_REG_A_M, odr << MagODR0);
+
+    if (mode == MagLowPowerMode) {
+        setMagRegisterBits(CFG_REG_A_M, _BV(LP));
+    }
+    else {
+        unsetMagRegisterBits(CFG_REG_A_M, _BV(LP));
+    }
+
+    if (compensateTemp) {
+        setMagRegisterBits(CFG_REG_A_M, _BV(COMP_TEMP_EN));
+    }
+    else {
+        unsetMagRegisterBits(CFG_REG_A_M, _BV(COMP_TEMP_EN));
+    }
+}
+
 void Sodaq_LSM303AGR::disableAccelerometer()
 {
     enableAccelerometer(LowPowerMode, PowerDown, NoAxis, _accelScale, false);
+}
+
+void Sodaq_LSM303AGR::disableMagnetometer()
+{
+    enableMagnetometer(MagLowPowerMode, Hz10, IdleMode, false);
 }
 
 void Sodaq_LSM303AGR::rebootAccelerometer()
@@ -93,9 +119,9 @@ void Sodaq_LSM303AGR::rebootAccelerometer()
     writeAccelRegister(CTRL_REG5_A, _BV(BOOT));
 }
 
-void Sodaq_LSM303AGR::disableMagnetometer()
+void Sodaq_LSM303AGR::rebootMagnetometer()
 {
-    writeMagRegister(CFG_REG_A_M, 0b00010011); // idle
+    writeAccelRegister(CFG_REG_A_M, _BV(REBOOT));
 }
 
 void Sodaq_LSM303AGR::setRegisterBits(uint8_t deviceAddress, Register reg, uint8_t byteValue)
