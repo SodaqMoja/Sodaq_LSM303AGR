@@ -267,6 +267,8 @@ public:
     void disableInterrupt1();
     void enableInterrupt2(uint8_t axesEvents, double threshold, uint8_t duration, InterruptMode interruptMode = MovementRecognition);
     void disableInterrupt2();
+    void enableMagnetometerInterrupt(uint8_t axesEvents, double threshold, uint8_t duration, bool highOnInterrupt = true);
+    void disableMagnetometerInterrupt();
 
     double getX() { return getGsFromScaledValue(readAccelRegister16Bits(Sodaq_LSM303AGR::OUT_X_L_A)); };
     double getY() { return getGsFromScaledValue(readAccelRegister16Bits(Sodaq_LSM303AGR::OUT_Y_L_A)); };
@@ -286,6 +288,8 @@ protected:
     double getGsFromScaledValue(int16_t value);
     int16_t getScaledValueFromGs(double gValue);
     int8_t getAccelScaleMax(Scale scale);
+    double getMagFromScaledValue(int16_t value);
+    double getMagScaleMax();
 
     uint8_t readRegister(uint8_t deviceAddress, uint8_t reg);
     uint16_t readRegister16Bits(uint8_t deviceAddress, uint8_t reg);

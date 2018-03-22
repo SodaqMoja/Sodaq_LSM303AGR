@@ -189,6 +189,42 @@ void Sodaq_LSM303AGR::disableInterrupt2()
     unsetAccelRegisterBits(CTRL_REG6_A, _BV(I2_INT2));
 }
 
+
+void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double threshold, uint8_t duration, bool highOnInterrupt)
+{
+    // setup the interrupt
+    writeMagRegister(INT_CTRL_REG_M, (magAxesEvents << XIEN));
+    int16_t ths = trunc(mapDouble(threshold, 0, getMagScaleMax(), 0, INT16_MAX / 2));
+    writeMagRegister(INT_THS_L_REG_M, ths & 0x00FF);
+    writeMagRegister(INT_THS_H_REG_M, ths >> 8);
+
+    // interrupt mode
+    if (highOnInterrupt) {
+        setMagRegisterBits(INT_CTRL_REG_M, _BV(IEA));
+    }
+    else {
+        unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEA));
+    }
+
+    // disable latching
+    unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEL));
+
+    // set mag interrupt to INT_MAG_PIN
+    setMagRegisterBits(CFG_REG_C_M, _BV(INT_MAG_PIN));
+
+    // enable DRDY pin as digital output
+    setMagRegisterBits(CFG_REG_C_M, _BV(INT_MAG));
+
+    // enable mag interrupt
+    setMagRegisterBits(INT_CTRL_REG_M, _BV(IEN));
+}
+
+void Sodaq_LSM303AGR::disableMagnetometerInterrupt()
+{
+    // disable mag interrupt
+    unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEN));
+}
+
 uint8_t Sodaq_LSM303AGR::readRegister(uint8_t deviceAddress, uint8_t reg)
 {
     _wire.beginTransmission(deviceAddress);
