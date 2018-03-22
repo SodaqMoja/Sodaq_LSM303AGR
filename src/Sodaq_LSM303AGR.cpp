@@ -148,7 +148,7 @@ void Sodaq_LSM303AGR::enableInterrupt2(uint8_t axesEvents, double threshold, uin
 
 void Sodaq_LSM303AGR::disableInterrupt2()
 {
-    // enable interrupt generator 2 on INT2
+    // disable interrupt generator 2 on INT2
     unsetAccelRegisterBits(CTRL_REG6_A, _BV(I2_INT2));
 }
 
@@ -166,6 +166,7 @@ uint8_t Sodaq_LSM303AGR::readRegister(uint8_t deviceAddress, uint8_t reg)
 uint16_t Sodaq_LSM303AGR::readRegister16Bits(uint8_t deviceAddress, uint8_t reg)
 {
     // TODO replace with request of 2 bytes?
+    // TODO: don't we need BDU Here?
     uint16_t result = readRegister(deviceAddress, reg);
     result |= readRegister(deviceAddress, reg + 1) << 8;
 

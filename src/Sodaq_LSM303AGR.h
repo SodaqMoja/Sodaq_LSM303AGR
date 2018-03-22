@@ -60,7 +60,7 @@ public:
         CFG_REG_A_M = 0x60,
         CFG_REG_B_M = 0x61,
         CFG_REG_C_M = 0x62,
-        INT_CRTL_REG_M = 0x63,
+        INT_CTRL_REG_M = 0x63,
         INT_SOURCE_REG_M = 0x64,
         INT_THS_L_REG_M = 0x65,
         INT_THS_H_REG_M = 0x66,
