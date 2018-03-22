@@ -53,6 +53,12 @@ int8_t Sodaq_LSM303AGR::getAccelScaleMax(Scale scale)
     return (1 << (scale + 1));
 }
 
+bool Sodaq_LSM303AGR::checkWhoAmI()
+{
+    return readAccelRegister(WHO_AM_I_A) == 0b00110011 &&
+    readMagRegister(WHO_AM_I_M) == 0b01000000;
+}
+
 void Sodaq_LSM303AGR::enableAccelerometer(AccelerometerMode mode, AccelerometerODR odr, Axes axes, Scale scale, bool isTemperatureOn)
 {
     // set odr, mode, enabled axes

@@ -251,6 +251,9 @@ public:
     };
 
     Sodaq_LSM303AGR(TwoWire& wire = Wire, uint8_t accelAddress = SODAQ_LSM303AGR_ACCEL_ADDRESS, uint8_t magAddress = SODAQ_LSM303AGR_MAG_ADDRESS);
+
+    bool checkWhoAmI();
+
     int8_t getTemperatureDelta();
     void enableAccelerometer(AccelerometerMode mode = NormalMode, AccelerometerODR odr = HrNormalLowPower25Hz, Axes axes = XYZ, Scale scale = Scale2g, bool isTemperatureOn = true);
     void disableAccelerometer();
