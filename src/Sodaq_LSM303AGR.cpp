@@ -42,6 +42,12 @@ double Sodaq_LSM303AGR::getGsFromScaledValue(int16_t value)
     return mapDouble(value, INT16_MIN, INT16_MAX, -scaleMax, scaleMax);
 }
 
+double Sodaq_LSM303AGR::getMagFromScaledValue(int16_t value)
+{
+    double scaleMax = getMagScaleMax();
+    return mapDouble(value, INT16_MIN, INT16_MAX, -scaleMax, scaleMax);
+}
+
 int16_t Sodaq_LSM303AGR::getScaledValueFromGs(double gValue)
 {
     int8_t scaleMax = getAccelScaleMax(_accelScale);
@@ -51,6 +57,11 @@ int16_t Sodaq_LSM303AGR::getScaledValueFromGs(double gValue)
 int8_t Sodaq_LSM303AGR::getAccelScaleMax(Scale scale)
 {
     return (1 << (scale + 1));
+}
+
+double Sodaq_LSM303AGR::getMagScaleMax()
+{
+    return 49.152;
 }
 
 bool Sodaq_LSM303AGR::checkWhoAmI()

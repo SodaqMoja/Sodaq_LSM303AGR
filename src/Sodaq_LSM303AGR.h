@@ -271,6 +271,10 @@ public:
     double getX() { return getGsFromScaledValue(readAccelRegister16Bits(Sodaq_LSM303AGR::OUT_X_L_A)); };
     double getY() { return getGsFromScaledValue(readAccelRegister16Bits(Sodaq_LSM303AGR::OUT_Y_L_A)); };
     double getZ() { return getGsFromScaledValue(readAccelRegister16Bits(Sodaq_LSM303AGR::OUT_Z_L_A)); };
+
+    double getMagX() { return getMagFromScaledValue(readMagRegister16Bits(Sodaq_LSM303AGR::OUTX_L_REG_M)); };
+    double getMagY() { return getMagFromScaledValue(readMagRegister16Bits(Sodaq_LSM303AGR::OUTY_L_REG_M)); };
+    double getMagZ() { return getMagFromScaledValue(readMagRegister16Bits(Sodaq_LSM303AGR::OUTZ_L_REG_M)); };
 protected:
     TwoWire& _wire;
     uint8_t _accelAddress;
