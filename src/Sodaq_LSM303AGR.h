@@ -291,7 +291,6 @@ protected:
     int16_t getScaledValueFromGs(double gValue);
     int8_t getAccelScaleMax(Scale scale);
     double getMagFromScaledValue(int16_t value);
-    double getMagScaleMax();
 
     uint8_t readRegister(uint8_t deviceAddress, uint8_t reg);
     uint16_t readRegister16Bits(uint8_t deviceAddress, uint8_t reg);
