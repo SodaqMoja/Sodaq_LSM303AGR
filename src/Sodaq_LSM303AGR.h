@@ -259,7 +259,7 @@ public:
     void disableAccelerometer();
     void rebootAccelerometer();
 
-    void enableMagnetometer(MagnetometerMode mode = MagLowPowerMode, MagnetometerODR odr = Hz10, MagnetometerSystemMode systemMode = Single, bool compensateTemp = false);
+    void enableMagnetometer(MagnetometerMode mode = MagLowPowerMode, MagnetometerODR odr = Hz10, MagnetometerSystemMode systemMode = Single, bool compensateTemp = true, bool enableLPF = true);
     void disableMagnetometer();
     void rebootMagnetometer();
 
@@ -282,6 +282,8 @@ protected:
     uint8_t _accelAddress;
     uint8_t _magAddress;
     Scale _accelScale;
+
+    void setLPF(bool enabled);
 
     void setAccelScale(Scale scale);
 

@@ -67,7 +67,7 @@ double Sodaq_LSM303AGR::getMagScaleMax()
 bool Sodaq_LSM303AGR::checkWhoAmI()
 {
     return readAccelRegister(WHO_AM_I_A) == 0b00110011 &&
-    readMagRegister(WHO_AM_I_M) == 0b01000000;
+        readMagRegister(WHO_AM_I_M) == 0b01000000;
 }
 
 void Sodaq_LSM303AGR::enableAccelerometer(AccelerometerMode mode, AccelerometerODR odr, Axes axes, Scale scale, bool isTemperatureOn)
@@ -94,11 +94,10 @@ void Sodaq_LSM303AGR::enableAccelerometer(AccelerometerMode mode, AccelerometerO
     }
 }
 
-void Sodaq_LSM303AGR::enableMagnetometer(MagnetometerMode mode, MagnetometerODR odr, MagnetometerSystemMode systemMode, bool compensateTemp)
+void Sodaq_LSM303AGR::enableMagnetometer(MagnetometerMode mode, MagnetometerODR odr, MagnetometerSystemMode systemMode, bool compensateTemp, bool enableLPF)
 {
     // set odr, mode, systemMode
-    setMagRegisterBits(CFG_REG_A_M, systemMode);
-    setMagRegisterBits(CFG_REG_A_M, odr << MagODR0);
+    writeMagRegister(CFG_REG_A_M, (odr << MagODR0) | systemMode);
 
     if (mode == MagLowPowerMode) {
         setMagRegisterBits(CFG_REG_A_M, _BV(LP));
@@ -112,6 +111,29 @@ void Sodaq_LSM303AGR::enableMagnetometer(MagnetometerMode mode, MagnetometerODR 
     }
     else {
         unsetMagRegisterBits(CFG_REG_A_M, _BV(COMP_TEMP_EN));
+    }
+
+    // disable hard-iron calibration
+    writeMagRegister(OFFSET_X_REG_L_M, 0);
+    writeMagRegister(OFFSET_X_REG_H_M, 0);
+    writeMagRegister(OFFSET_Y_REG_L_M, 0);
+    writeMagRegister(OFFSET_Y_REG_H_M, 0);
+    writeMagRegister(OFFSET_Z_REG_L_M, 0);
+    writeMagRegister(OFFSET_Z_REG_H_M, 0);
+
+    // disable offset cancellation
+    unsetMagRegisterBits(CFG_REG_B_M, _BV(OFF_CANC));
+
+    setLPF(enableLPF);
+}
+
+void Sodaq_LSM303AGR::setLPF(bool enabled)
+{
+    if (enabled) {
+        setMagRegisterBits(CFG_REG_B_M, _BV(LPF));
+    }
+    else {
+        unsetMagRegisterBits(CFG_REG_B_M, _BV(LPF));
     }
 }
 
