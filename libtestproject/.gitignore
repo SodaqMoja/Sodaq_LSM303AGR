@@ -5,3 +5,6 @@ Release
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+
+Sodaq_LSM303AGR.cpp
+Sodaq_LSM303AGR.h
