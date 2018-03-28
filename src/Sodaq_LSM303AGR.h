@@ -143,7 +143,7 @@ public:
         MagBLE = 3,
         MagBDU = 4,
         I2C_DIS = 5,
-        INT_MAG_PIN = 5,
+        INT_MAG_PIN = 6,
 
         // INT_CTRL_REG_M
         IEN = 0,
