@@ -267,7 +267,7 @@ public:
     void disableInterrupt1();
     void enableInterrupt2(uint8_t axesEvents, double threshold, uint8_t duration, InterruptMode interruptMode = MovementRecognition);
     void disableInterrupt2();
-    void enableMagnetometerInterrupt(uint8_t axesEvents, double threshold, uint8_t duration, bool highOnInterrupt = true);
+    void enableMagnetometerInterrupt(uint8_t axesEvents, double threshold, bool highOnInterrupt = true);
     void disableMagnetometerInterrupt();
 
     double getX() { return getGsFromScaledValue(readAccelRegister16Bits(Sodaq_LSM303AGR::OUT_X_L_A)); };

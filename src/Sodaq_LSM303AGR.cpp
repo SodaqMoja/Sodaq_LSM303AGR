@@ -206,13 +206,10 @@ void Sodaq_LSM303AGR::disableInterrupt2()
 }
 
 
-void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double threshold, uint8_t duration, bool highOnInterrupt)
+void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double threshold, bool highOnInterrupt)
 {
-    // setup the interrupt
-    writeMagRegister(INT_CTRL_REG_M, (magAxesEvents << XIEN));
-    int16_t ths = trunc(mapDouble(threshold, 0, getMagScaleMax(), 0, INT16_MAX / 2));
-    writeMagRegister(INT_THS_L_REG_M, ths & 0x00FF);
-    writeMagRegister(INT_THS_H_REG_M, ths >> 8);
+    // set axes
+    writeMagRegister(INT_CTRL_REG_M, (magAxesEvents << ZIEN));
 
     // interrupt mode
     if (highOnInterrupt) {
@@ -222,17 +219,26 @@ void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double 
         unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEA));
     }
 
+    // set threshold registers
+    int16_t ths = trunc(threshold / 1.5);
+    writeMagRegister(INT_THS_L_REG_M, ths & 0x00FF);
+    writeMagRegister(INT_THS_H_REG_M, (ths & 0xFF00) >> 8);
+
+    // need to unset for proper functioning of device
+    unsetMagRegisterBits(INT_CTRL_REG_M, _BV(3));
+    unsetMagRegisterBits(INT_CTRL_REG_M, _BV(4));
+
     // disable latching
     unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEL));
+
+    // enable mag interrupt
+    setMagRegisterBits(INT_CTRL_REG_M, _BV(IEN));
 
     // set mag interrupt to INT_MAG_PIN
     setMagRegisterBits(CFG_REG_C_M, _BV(INT_MAG_PIN));
 
     // enable DRDY pin as digital output
     setMagRegisterBits(CFG_REG_C_M, _BV(INT_MAG));
-
-    // enable mag interrupt
-    setMagRegisterBits(INT_CTRL_REG_M, _BV(IEN));
 }
 
 void Sodaq_LSM303AGR::disableMagnetometerInterrupt()
