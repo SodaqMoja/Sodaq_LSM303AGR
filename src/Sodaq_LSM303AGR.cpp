@@ -241,9 +241,6 @@ void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double 
 
     // set mag interrupt to INT_MAG_PIN
     setMagRegisterBits(CFG_REG_C_M, _BV(INT_MAG_PIN));
-
-    // enable DRDY pin as digital output
-    setMagRegisterBits(CFG_REG_C_M, _BV(INT_MAG));
 }
 
 void Sodaq_LSM303AGR::disableMagnetometerInterrupt()
