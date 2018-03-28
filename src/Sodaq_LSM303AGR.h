@@ -60,7 +60,7 @@ public:
         CFG_REG_A_M = 0x60,
         CFG_REG_B_M = 0x61,
         CFG_REG_C_M = 0x62,
-        INT_CRTL_REG_M = 0x63,
+        INT_CTRL_REG_M = 0x63,
         INT_SOURCE_REG_M = 0x64,
         INT_THS_L_REG_M = 0x65,
         INT_THS_H_REG_M = 0x66,
@@ -117,6 +117,65 @@ public:
         // TEMP_CFG_REG_A
         TEMP_EN1 = 7,
         TEMP_EN0 = 6,
+
+    };
+
+    enum MagRegisterBits {
+        // CFG_REG_A_M
+        MD0 = 0,
+        MD1 = 1,
+        MagODR0 = 2,
+        LP = 4,
+        SOFT_RST = 5,
+        REBOOT = 6,
+        COMP_TEMP_EN = 7,
+
+        // CFG_REG_B_M
+        LPF = 0,
+        OFF_CANC = 1,
+        Set_FREQ = 2,
+        INT_on_DataOFF = 3,
+        OFF_CANC_ONE_SHOT = 4,
+
+        // CFG_REG_C_M
+        INT_MAG = 0,
+        Self_test = 1,
+        MagBLE = 3,
+        MagBDU = 4,
+        I2C_DIS = 5,
+        INT_MAG_PIN = 6,
+
+        // INT_CTRL_REG_M
+        IEN = 0,
+        IEL = 1,
+        IEA = 2,
+        ZIEN = 5,
+        YIEN = 6,
+        XIEN = 7,
+
+        // INT_SOURCE_REG_M
+        INT = 0,
+        MROI = 1,
+        X_TH_S_Z = 2,
+        N_TH_S_Y = 3,
+        N_TH_S_X = 4,
+
+        P_TH_S_Z = 5,
+        P_TH_S_Y = 6,
+        P_TH_S_X = 7,
+
+        // STATUS_REG_M
+        xda = 0,
+        yda = 1,
+        zda = 2,
+
+        Zyxda = 3,
+
+        Magxor = 4,
+        Magyor = 5,
+        Magzor = 5,
+
+        Zyxor = 6,
     };
 
     // the values of the following enum are 0b(LPen,HR)
@@ -124,6 +183,11 @@ public:
         LowPowerMode = 0b10,
         NormalMode = 0b00,
         HighResMode = 0b01
+    };
+
+    enum MagnetometerMode {
+        MagLowPowerMode = 0b0,
+        MagHighResMode = 0b1
     };
 
     enum AccelerometerODR {
@@ -139,6 +203,19 @@ public:
         HrNormal1k344LowPower5k376Hz = 0b1001
     };
 
+    enum MagnetometerODR {
+        Hz10 = 0b00,
+        Hz20 = 0b01,
+        Hz50 = 0b10,
+        Hz100 = 0b11,
+    };
+
+    enum MagnetometerSystemMode {
+        Continiuous = 0b00,
+        Single = 0b01,
+        IdleMode = 0b10,
+    };
+
     enum Axes {
         NoAxis = 0,
         X = 0b001,
@@ -148,6 +225,12 @@ public:
         XZ = X | Z,
         YZ = Y | Z,
         XYZ = X | Y | Z
+    };
+
+    enum MagAxes {
+        MagX = 0b100,
+        MagY = 0b010,
+        MagZ = 0b001
     };
 
     enum Scale {
@@ -174,32 +257,46 @@ public:
     };
 
     Sodaq_LSM303AGR(TwoWire& wire = Wire, uint8_t accelAddress = SODAQ_LSM303AGR_ACCEL_ADDRESS, uint8_t magAddress = SODAQ_LSM303AGR_MAG_ADDRESS);
+
+    bool checkWhoAmI();
+
     int8_t getTemperatureDelta();
     void enableAccelerometer(AccelerometerMode mode = NormalMode, AccelerometerODR odr = HrNormalLowPower25Hz, Axes axes = XYZ, Scale scale = Scale2g, bool isTemperatureOn = true);
     void disableAccelerometer();
     void rebootAccelerometer();
 
+    void enableMagnetometer(MagnetometerMode mode = MagLowPowerMode, MagnetometerODR odr = Hz10, MagnetometerSystemMode systemMode = Single, bool compensateTemp = true, bool enableLPF = true);
     void disableMagnetometer();
+    void rebootMagnetometer();
 
     void enableInterrupt1(uint8_t axesEvents, double threshold, uint8_t duration, InterruptMode interruptMode = MovementRecognition);
     void disableInterrupt1();
     void enableInterrupt2(uint8_t axesEvents, double threshold, uint8_t duration, InterruptMode interruptMode = MovementRecognition);
     void disableInterrupt2();
+    void enableMagnetometerInterrupt(uint8_t axesEvents, double threshold, bool highOnInterrupt = true);
+    void disableMagnetometerInterrupt();
 
     double getX() { return getGsFromScaledValue(readAccelRegister16Bits(Sodaq_LSM303AGR::OUT_X_L_A)); };
     double getY() { return getGsFromScaledValue(readAccelRegister16Bits(Sodaq_LSM303AGR::OUT_Y_L_A)); };
     double getZ() { return getGsFromScaledValue(readAccelRegister16Bits(Sodaq_LSM303AGR::OUT_Z_L_A)); };
+
+    double getMagX() { return getMagFromScaledValue(readMagRegister16Bits(Sodaq_LSM303AGR::OUTX_L_REG_M)); };
+    double getMagY() { return getMagFromScaledValue(readMagRegister16Bits(Sodaq_LSM303AGR::OUTY_L_REG_M)); };
+    double getMagZ() { return getMagFromScaledValue(readMagRegister16Bits(Sodaq_LSM303AGR::OUTZ_L_REG_M)); };
 protected:
     TwoWire& _wire;
     uint8_t _accelAddress;
     uint8_t _magAddress;
     Scale _accelScale;
 
+    void setLPF(bool enabled);
+
     void setAccelScale(Scale scale);
 
     double getGsFromScaledValue(int16_t value);
     int16_t getScaledValueFromGs(double gValue);
     int8_t getAccelScaleMax(Scale scale);
+    double getMagFromScaledValue(int16_t value);
 
     uint8_t readRegister(uint8_t deviceAddress, uint8_t reg);
     uint16_t readRegister16Bits(uint8_t deviceAddress, uint8_t reg);

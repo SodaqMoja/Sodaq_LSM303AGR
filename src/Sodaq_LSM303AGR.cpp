@@ -42,6 +42,11 @@ double Sodaq_LSM303AGR::getGsFromScaledValue(int16_t value)
     return mapDouble(value, INT16_MIN, INT16_MAX, -scaleMax, scaleMax);
 }
 
+double Sodaq_LSM303AGR::getMagFromScaledValue(int16_t value)
+{
+    return value * 1.5;
+}
+
 int16_t Sodaq_LSM303AGR::getScaledValueFromGs(double gValue)
 {
     int8_t scaleMax = getAccelScaleMax(_accelScale);
@@ -51,6 +56,12 @@ int16_t Sodaq_LSM303AGR::getScaledValueFromGs(double gValue)
 int8_t Sodaq_LSM303AGR::getAccelScaleMax(Scale scale)
 {
     return (1 << (scale + 1));
+}
+
+bool Sodaq_LSM303AGR::checkWhoAmI()
+{
+    return (readAccelRegister(WHO_AM_I_A) == 0b00110011) &&
+            (readMagRegister(WHO_AM_I_M) == 0b01000000);
 }
 
 void Sodaq_LSM303AGR::enableAccelerometer(AccelerometerMode mode, AccelerometerODR odr, Axes axes, Scale scale, bool isTemperatureOn)
@@ -77,9 +88,57 @@ void Sodaq_LSM303AGR::enableAccelerometer(AccelerometerMode mode, AccelerometerO
     }
 }
 
+void Sodaq_LSM303AGR::enableMagnetometer(MagnetometerMode mode, MagnetometerODR odr, MagnetometerSystemMode systemMode, bool compensateTemp, bool enableLPF)
+{
+    // set odr, mode, systemMode
+    writeMagRegister(CFG_REG_A_M, (odr << MagODR0) | systemMode);
+
+    if (mode == MagLowPowerMode) {
+        setMagRegisterBits(CFG_REG_A_M, _BV(LP));
+    }
+    else {
+        unsetMagRegisterBits(CFG_REG_A_M, _BV(LP));
+    }
+
+    if (compensateTemp) {
+        setMagRegisterBits(CFG_REG_A_M, _BV(COMP_TEMP_EN));
+    }
+    else {
+        unsetMagRegisterBits(CFG_REG_A_M, _BV(COMP_TEMP_EN));
+    }
+
+    // disable hard-iron calibration
+    writeMagRegister(OFFSET_X_REG_L_M, 0);
+    writeMagRegister(OFFSET_X_REG_H_M, 0);
+    writeMagRegister(OFFSET_Y_REG_L_M, 0);
+    writeMagRegister(OFFSET_Y_REG_H_M, 0);
+    writeMagRegister(OFFSET_Z_REG_L_M, 0);
+    writeMagRegister(OFFSET_Z_REG_H_M, 0);
+
+    // disable offset cancellation
+    unsetMagRegisterBits(CFG_REG_B_M, _BV(OFF_CANC));
+
+    setLPF(enableLPF);
+}
+
+void Sodaq_LSM303AGR::setLPF(bool enabled)
+{
+    if (enabled) {
+        setMagRegisterBits(CFG_REG_B_M, _BV(LPF));
+    }
+    else {
+        unsetMagRegisterBits(CFG_REG_B_M, _BV(LPF));
+    }
+}
+
 void Sodaq_LSM303AGR::disableAccelerometer()
 {
     enableAccelerometer(LowPowerMode, PowerDown, NoAxis, _accelScale, false);
+}
+
+void Sodaq_LSM303AGR::disableMagnetometer()
+{
+    enableMagnetometer(MagLowPowerMode, Hz10, IdleMode, false);
 }
 
 void Sodaq_LSM303AGR::rebootAccelerometer()
@@ -87,9 +146,9 @@ void Sodaq_LSM303AGR::rebootAccelerometer()
     writeAccelRegister(CTRL_REG5_A, _BV(BOOT));
 }
 
-void Sodaq_LSM303AGR::disableMagnetometer()
+void Sodaq_LSM303AGR::rebootMagnetometer()
 {
-    writeMagRegister(CFG_REG_A_M, 0b00010011); // idle
+    writeMagRegister(CFG_REG_A_M, _BV(REBOOT));
 }
 
 void Sodaq_LSM303AGR::setRegisterBits(uint8_t deviceAddress, Register reg, uint8_t byteValue)
@@ -142,8 +201,48 @@ void Sodaq_LSM303AGR::enableInterrupt2(uint8_t axesEvents, double threshold, uin
 
 void Sodaq_LSM303AGR::disableInterrupt2()
 {
-    // enable interrupt generator 2 on INT2
+    // disable interrupt generator 2 on INT2
     unsetAccelRegisterBits(CTRL_REG6_A, _BV(I2_INT2));
+}
+
+
+void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double threshold, bool highOnInterrupt)
+{
+    // threshold needs to be positive, because mag checks interrupts for -threshold and +threshold always
+    if (threshold < 0) {
+        threshold = -threshold;
+    }
+
+    // set axes
+    writeMagRegister(INT_CTRL_REG_M, (magAxesEvents << ZIEN));
+
+    // interrupt mode
+    if (highOnInterrupt) {
+        setMagRegisterBits(INT_CTRL_REG_M, _BV(IEA));
+    }
+    else {
+        unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEA));
+    }
+    
+    // set threshold registers
+    int16_t ths = trunc(threshold / 1.5);
+    writeMagRegister(INT_THS_L_REG_M, ths & 0x00FF);
+    writeMagRegister(INT_THS_H_REG_M, (ths & 0xFF00) >> 8);
+
+    // disable latching
+    unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEL));
+
+    // enable mag interrupt
+    setMagRegisterBits(INT_CTRL_REG_M, _BV(IEN));
+
+    // set mag interrupt to INT_MAG_PIN
+    setMagRegisterBits(CFG_REG_C_M, _BV(INT_MAG_PIN));
+}
+
+void Sodaq_LSM303AGR::disableMagnetometerInterrupt()
+{
+    // disable mag interrupt
+    unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEN));
 }
 
 uint8_t Sodaq_LSM303AGR::readRegister(uint8_t deviceAddress, uint8_t reg)
@@ -160,6 +259,7 @@ uint8_t Sodaq_LSM303AGR::readRegister(uint8_t deviceAddress, uint8_t reg)
 uint16_t Sodaq_LSM303AGR::readRegister16Bits(uint8_t deviceAddress, uint8_t reg)
 {
     // TODO replace with request of 2 bytes?
+    // TODO: don't we need BDU Here?
     uint16_t result = readRegister(deviceAddress, reg);
     result |= readRegister(deviceAddress, reg + 1) << 8;
 
