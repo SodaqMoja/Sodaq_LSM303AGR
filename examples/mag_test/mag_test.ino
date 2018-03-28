@@ -1,24 +1,23 @@
-
-#include "Sodaq_LSM303AGR.h"
-
-
-#define LED_RED 14
+#include <Sodaq_LSM303AGR.h>
 
 Sodaq_LSM303AGR accel;
 
 volatile bool magInterruptFlag = true;
 
-void magInterrupt() {
+void magInterrupt() 
+{
     magInterruptFlag = true;
 }
 
-void setup() {
-    pinMode(LED_RED, OUTPUT);
+void setup() 
+{
     SerialUSB.begin(57600);
     delay(1000);
+
     SerialUSB.println("BEGIN");
     Wire.begin();
     delay(1000);
+
     if (accel.checkWhoAmI()) {
         SerialUSB.println("FOUND ACCEL!");
     }
@@ -35,12 +34,13 @@ void setup() {
     accel.enableMagnetometerInterrupt(axes, -400);
 
     pinMode(MAG_INT, INPUT_PULLDOWN);
-
     attachInterrupt(MAG_INT, magInterrupt, RISING);
 }
 
-void loop() {
+void loop() 
+{
     delay(100);
+
     SerialUSB.print(accel.getMagX());
     SerialUSB.print(" ");
     SerialUSB.print(accel.getMagY());
@@ -51,5 +51,4 @@ void loop() {
         SerialUSB.println("INTERRUPT");
         magInterruptFlag = false;
     }
-
 }
