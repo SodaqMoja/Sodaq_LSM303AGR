@@ -229,10 +229,6 @@ void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double 
     writeMagRegister(INT_THS_L_REG_M, ths & 0x00FF);
     writeMagRegister(INT_THS_H_REG_M, (ths & 0xFF00) >> 8);
 
-    // need to unset for proper functioning of device
-    unsetMagRegisterBits(INT_CTRL_REG_M, _BV(3));
-    unsetMagRegisterBits(INT_CTRL_REG_M, _BV(4));
-
     // disable latching
     unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEL));
 
