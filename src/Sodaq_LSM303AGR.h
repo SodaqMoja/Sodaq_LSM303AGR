@@ -227,6 +227,12 @@ public:
         XYZ = X | Y | Z
     };
 
+    enum MagAxes {
+        MagX = 0b100,
+        MagY = 0b010,
+        MagZ = 0b001
+    };
+
     enum Scale {
         Scale2g = 0,
         Scale4g = 0b01,
