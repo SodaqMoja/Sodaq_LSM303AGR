@@ -148,7 +148,7 @@ void Sodaq_LSM303AGR::rebootAccelerometer()
 
 void Sodaq_LSM303AGR::rebootMagnetometer()
 {
-    writeAccelRegister(CFG_REG_A_M, _BV(REBOOT));
+    writeMagRegister(CFG_REG_A_M, _BV(REBOOT));
 }
 
 void Sodaq_LSM303AGR::setRegisterBits(uint8_t deviceAddress, Register reg, uint8_t byteValue)
@@ -218,7 +218,7 @@ void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double 
     else {
         unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEA));
     }
-
+    
     // set threshold registers
     int16_t ths = trunc(threshold / 1.5);
     writeMagRegister(INT_THS_L_REG_M, ths & 0x00FF);
