@@ -208,6 +208,11 @@ void Sodaq_LSM303AGR::disableInterrupt2()
 
 void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double threshold, bool highOnInterrupt)
 {
+    // threshold needs to be positive, because mag checks interrupts for -threshold and +threshold always
+    if (threshold < 0) {
+        threshold = -threshold;
+    }
+
     // set axes
     writeMagRegister(INT_CTRL_REG_M, (magAxesEvents << ZIEN));
 
