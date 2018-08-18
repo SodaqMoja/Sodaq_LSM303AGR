@@ -292,8 +292,7 @@ protected:
     void setLPF(bool enabled);
 
     double getGsFromScaledValue(int16_t value);
-    int16_t getScaledValueFromGs(double gValue);
-    int8_t getAccelScaleMax(Scale scale);
+    uint8_t getScaledInterruptThreshold(double threshold);
     double getMagFromScaledValue(int16_t value);
 
     uint8_t readRegister(uint8_t deviceAddress, uint8_t reg);

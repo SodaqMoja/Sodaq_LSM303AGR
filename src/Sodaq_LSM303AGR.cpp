@@ -38,24 +38,52 @@ int8_t Sodaq_LSM303AGR::getTemperature()
 
 double Sodaq_LSM303AGR::getGsFromScaledValue(int16_t value)
 {
-    int8_t scaleMax = getAccelScaleMax(_accelScale);
-    return mapDouble(value, INT16_MIN, INT16_MAX, -scaleMax, scaleMax);
+    if (_accelMode == AccelerometerMode::HighResMode) {
+        value /= pow(2, 4); // 12-bit value
+        
+        switch (_accelScale)
+        {
+            case Scale::Scale2g: return value * 1.0f / 1000.0f;
+            case Scale::Scale4g: return value * 2.0f / 1000.0f;
+            case Scale::Scale8g: return value * 4.0f / 1000.0f;
+            case Scale::Scale16g: return value * 12.0f / 1000.0f;
+            default:
+                break;
+        }
+    }
+    else if (_accelMode == AccelerometerMode::NormalMode) {
+        value /= pow(2, 6); // 10-bit value
+        
+        switch (_accelScale)
+        {
+            case Scale::Scale2g: return value * 4.0f / 1000.0f;
+            case Scale::Scale4g: return value * 8.0f / 1000.0f;
+            case Scale::Scale8g: return value * 16.0f / 1000.0f;
+            case Scale::Scale16g: return value * 48.0f / 1000.0f;
+            default:
+                break;
+        }
+    }
+    else if (_accelMode == AccelerometerMode::LowPowerMode) {
+        value /= pow(2, 8); // 8-bit value
+        
+        switch (_accelScale)
+        {
+            case Scale::Scale2g: return value * 16.0f / 1000.0f;
+            case Scale::Scale4g: return value * 32.0f / 1000.0f;
+            case Scale::Scale8g: return value * 64.0f / 1000.0f;
+            case Scale::Scale16g: return value * 192.0f / 1000.0f;
+            default:
+                break;
+        }
+    }
+
+    return 0.0f;
 }
 
 double Sodaq_LSM303AGR::getMagFromScaledValue(int16_t value)
 {
     return value * 1.5;
-}
-
-int16_t Sodaq_LSM303AGR::getScaledValueFromGs(double gValue)
-{
-    int8_t scaleMax = getAccelScaleMax(_accelScale);
-    return trunc(mapDouble(gValue, -scaleMax, scaleMax, INT16_MIN, INT16_MAX));
-}
-
-int8_t Sodaq_LSM303AGR::getAccelScaleMax(Scale scale)
-{
-    return (1 << (scale + 1));
 }
 
 bool Sodaq_LSM303AGR::checkWhoAmI()
@@ -178,11 +206,32 @@ void Sodaq_LSM303AGR::unsetRegisterBits(uint8_t deviceAddress, Register reg, uin
     writeRegister(deviceAddress, reg, value);
 }
 
+uint8_t Sodaq_LSM303AGR::getScaledInterruptThreshold(double threshold)
+{
+    uint8_t divider = 0; // divider in mg
+
+    switch (_accelScale)
+    {
+    case Scale::Scale2g: divider = 16;
+        break;
+    case Scale::Scale4g: divider = 32;
+        break;
+    case Scale::Scale8g: divider = 62;
+        break;
+    case Scale::Scale16g: divider = 186;
+        break;
+    default:
+        break;
+    }
+
+    return trunc(threshold * 1000.0f / divider);
+}
+
 void Sodaq_LSM303AGR::enableInterrupt1(uint8_t axesEvents, double threshold, uint8_t duration, InterruptMode interruptMode)
 {
     // setup the interrupt
     writeAccelRegister(INT1_CFG_A, interruptMode | (axesEvents & 0b00111111));
-    writeAccelRegister(INT1_THS_A, trunc(mapDouble(threshold, 0, getAccelScaleMax(_accelScale), 0, INT8_MAX)));
+    writeAccelRegister(INT1_THS_A, getScaledInterruptThreshold(threshold));
     writeAccelRegister(INT1_DURATION_A, duration); // time duration is INT1_DURATION_A/ODR
 
     // disable latching
@@ -202,7 +251,7 @@ void Sodaq_LSM303AGR::enableInterrupt2(uint8_t axesEvents, double threshold, uin
 {
     // setup the interrupt
     writeAccelRegister(INT2_CFG_A, interruptMode | (axesEvents & 0b00111111));
-    writeAccelRegister(INT2_THS_A, trunc(mapDouble(threshold, 0, getAccelScaleMax(_accelScale), 0, INT8_MAX)));
+    writeAccelRegister(INT2_THS_A, getScaledInterruptThreshold(threshold));
     writeAccelRegister(INT2_DURATION_A, duration);  // time duration is INT2_DURATION_A/ODR
 
     // disable latching
