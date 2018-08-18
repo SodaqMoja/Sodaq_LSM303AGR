@@ -28,7 +28,7 @@ void setup()
     accel.rebootMagnetometer();
     delay(1000);
 
-    accel.enableMagnetometer(Sodaq_LSM303AGR::MagHighResMode, Sodaq_LSM303AGR::Hz100, Sodaq_LSM303AGR::Continiuous);
+    accel.enableMagnetometer(Sodaq_LSM303AGR::MagHighResMode, Sodaq_LSM303AGR::Hz100, Sodaq_LSM303AGR::Continuous);
 
     uint8_t axes = Sodaq_LSM303AGR::MagX;
     accel.enableMagnetometerInterrupt(axes, -400);

@@ -211,7 +211,7 @@ public:
     };
 
     enum MagnetometerSystemMode {
-        Continiuous = 0b00,
+        Continuous = 0b00,
         Single = 0b01,
         IdleMode = 0b10,
     };
