@@ -18,22 +18,22 @@ Sodaq_LSM303AGR::Sodaq_LSM303AGR(TwoWire& wire, uint8_t accelAddress, uint8_t ma
 
 }
 
-int8_t Sodaq_LSM303AGR::getTemperatureDelta()
+int8_t Sodaq_LSM303AGR::getTemperature()
 {
-    setAccelRegisterBits(CTRL_REG4_A, _BV(BDU));
+    int16_t value = readAccelRegister16Bits(OUT_TEMP_L_A);
 
-    readAccelRegister(OUT_TEMP_L_A); // low byte can be thrown away, but must be read!
-    int8_t value = readAccelRegister(OUT_TEMP_H_A);
+    if (_accelMode == AccelerometerMode::HighResMode || _accelMode == AccelerometerMode::NormalMode) {
+        value /= pow(2, 6); // 12-bit value
+        
+        return value / 4.0f + 25.0f;
+    }
+    else if (_accelMode == AccelerometerMode::LowPowerMode) {
+        value /= pow(2, 8); // 8-bit value
 
-    unsetAccelRegisterBits(CTRL_REG4_A, _BV(BDU));
+        return value + 25.0f;
+    }
 
-    return value;
-}
-
-void Sodaq_LSM303AGR::setAccelScale(Scale scale)
-{
-    writeAccelRegister(CTRL_REG4_A, (scale << FS0));
-    _accelScale = scale;
+    return 0.0f;
 }
 
 double Sodaq_LSM303AGR::getGsFromScaledValue(int16_t value)
@@ -68,15 +68,28 @@ void Sodaq_LSM303AGR::enableAccelerometer(AccelerometerMode mode, AccelerometerO
 {
     // set odr, mode, enabled axes
     // Note: the values of AccelerometerMode are 0b(LPen,HR)
-    writeAccelRegister(CTRL_REG1_A, (odr << ODR0) | ((mode & 0b10) << LPen) | axes);
-    if (mode & 0b01) {
-        setAccelRegisterBits(CTRL_REG4_A, _BV(HR));
+    uint8_t ctrlReg1A = (odr << ODR0) | (((mode & 0b10) == 0b10) << LPen) | axes;
+    writeAccelRegister(CTRL_REG1_A, ctrlReg1A);
+    uint8_t ctrlReg4A = readAccelRegister(CTRL_REG4_A);
+    if ((mode & 0b01) == 0b01) {
+        ctrlReg4A |= _BV(HR);
     }
     else {
-        unsetAccelRegisterBits(CTRL_REG4_A, _BV(HR));
+        ctrlReg4A &= ~_BV(HR);
     }
 
-    setAccelScale(scale);
+    // enable BDU
+    ctrlReg4A |= _BV(BDU);
+
+    // set scale
+    ctrlReg4A &= ~(0b11 << FS0); // first unset all FS bits
+    ctrlReg4A |= (scale << FS0);
+
+    // write the value to CTRL_REG4_A
+    writeAccelRegister(CTRL_REG4_A, ctrlReg4A);
+    
+    _accelScale = scale;
+    _accelMode = mode;
 
     if (isTemperatureOn) {
         // enable aux ADC and temperature sensor
@@ -204,7 +217,6 @@ void Sodaq_LSM303AGR::disableInterrupt2()
     // disable interrupt generator 2 on INT2
     unsetAccelRegisterBits(CTRL_REG6_A, _BV(I2_INT2));
 }
-
 
 void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double threshold, bool highOnInterrupt)
 {
