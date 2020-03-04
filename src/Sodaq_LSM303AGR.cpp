@@ -319,10 +319,14 @@ uint8_t Sodaq_LSM303AGR::readRegister(uint8_t deviceAddress, uint8_t reg)
 
 uint16_t Sodaq_LSM303AGR::readRegister16Bits(uint8_t deviceAddress, uint8_t reg)
 {
-    // TODO replace with request of 2 bytes?
     // TODO: don't we need BDU Here?
-    uint16_t result = readRegister(deviceAddress, reg);
-    result |= readRegister(deviceAddress, reg + 1) << 8;
+
+    _wire.beginTransmission(deviceAddress);
+    _wire.write((uint8_t)reg | 0x80); // ORing 0x80 enables the register auto incrementing after each read.
+    _wire.endTransmission();
+    _wire.requestFrom(deviceAddress, (uint8_t) 2);
+    uint16_t result = _wire.read();
+    result |= _wire.read() << 8;
 
     return result;
 }
