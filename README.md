@@ -1,3 +1,5 @@
+[![CI](https://github.com/SodaqMoja/Sodaq_LSM303AGR/workflows/CI/badge.svg)](https://github.com/SodaqMoja/Sodaq_LSM303AGR/actions?query=workflow%3ACI)
+
 # Sodaq_LSM303AGR
 
 Arduino library for the ST LSM303AGR.
