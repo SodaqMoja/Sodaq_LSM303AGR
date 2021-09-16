@@ -1,8 +1,41 @@
+/*
+Copyright (c) 2018 - 2021, SODAQ
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors
+may be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include <Arduino.h>
 #include <math.h>
 #include "Sodaq_LSM303AGR.h"
 
 #define _BV(bit) (1 << (bit))
+
+#define TEMP_8_BIT_DIV 256
 
 double mapDouble(double x, double in_min, double in_max, double out_min, double out_max)
 {
@@ -20,7 +53,7 @@ Sodaq_LSM303AGR::Sodaq_LSM303AGR(TwoWire& wire, uint8_t accelAddress, uint8_t ma
 
 int8_t Sodaq_LSM303AGR::getTemperature()
 {
-    int16_t value = readAccelRegister16Bits(OUT_TEMP_L_A)/pow(2, 8) + 25.0f;
+    int16_t value = readAccelRegister16Bits(OUT_TEMP_L_A)/TEMP_8_BIT_DIV + 25.0f;
 
     return value;
 }
@@ -29,7 +62,7 @@ double Sodaq_LSM303AGR::getGsFromScaledValue(int16_t value)
 {
     if (_accelMode == AccelerometerMode::HighResMode) {
         value /= pow(2, 4); // 12-bit value
-        
+
         switch (_accelScale)
         {
             case Scale::Scale2g: return value * 1.0f / 1000.0f;
@@ -42,7 +75,7 @@ double Sodaq_LSM303AGR::getGsFromScaledValue(int16_t value)
     }
     else if (_accelMode == AccelerometerMode::NormalMode) {
         value /= pow(2, 6); // 10-bit value
-        
+
         switch (_accelScale)
         {
             case Scale::Scale2g: return value * 4.0f / 1000.0f;
@@ -55,7 +88,7 @@ double Sodaq_LSM303AGR::getGsFromScaledValue(int16_t value)
     }
     else if (_accelMode == AccelerometerMode::LowPowerMode) {
         value /= pow(2, 8); // 8-bit value
-        
+
         switch (_accelScale)
         {
             case Scale::Scale2g: return value * 16.0f / 1000.0f;
@@ -104,7 +137,7 @@ void Sodaq_LSM303AGR::enableAccelerometer(AccelerometerMode mode, AccelerometerO
 
     // write the value to CTRL_REG4_A
     writeAccelRegister(CTRL_REG4_A, ctrlReg4A);
-    
+
     _accelScale = scale;
     _accelMode = mode;
 
@@ -273,7 +306,7 @@ void Sodaq_LSM303AGR::enableMagnetometerInterrupt(uint8_t magAxesEvents, double 
     else {
         unsetMagRegisterBits(INT_CTRL_REG_M, _BV(IEA));
     }
-    
+
     // set threshold registers
     int16_t ths = trunc(threshold / 1.5);
     writeMagRegister(INT_THS_L_REG_M, ths & 0x00FF);
